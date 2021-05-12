@@ -1,5 +1,8 @@
 const express = require('express')
 const cors = require('cors')
+const cookieParser = require('cookie-parser ')
+
+const userRouter = require('./controllers/users')
 
 const PORT = 3000
 const app = express()
@@ -10,11 +13,7 @@ app.use(express.urlencoded({
     extended:true
 }))
 
-app.post('/login',(req, res) => {
-    console.log("working")
-    console.log(req.body)
-    res.status(200).send()
-})
+app.use(userRouter)
 
 app.listen(PORT, () => {
     console.log(`Server is up at port ${PORT}`)
