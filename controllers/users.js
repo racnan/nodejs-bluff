@@ -15,6 +15,10 @@ router.post('/login', (req, res) => {
 
             // Password and Username match
             if (USERS[i].password === req.body.password) {
+                
+                //sets cookie for further authorization
+                res.cookie("auth",USERS[i].cookie)
+                
                 return res.status(200).send()
             }
 
