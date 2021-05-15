@@ -9,6 +9,8 @@ const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
 
+
+const _ = require('./controllers/game')(io)
 const userRouter = require('./controllers/users')
 
 const PORT = 3000

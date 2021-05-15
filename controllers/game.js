@@ -16,11 +16,13 @@ exports = module.exports = function (io) {
 
     io.on('connection', (socket) => {
 
+        console.log('conectted');
         // When a player enters the game it invokes "join",
         // and sends the "room" assigned to that user.
         // this function sends state of that room  as 
         // response.
         socket.on('join', (room) => {
+            console.log('join')
             socket.emit("join-resp", games[room].state)
         })
  
@@ -28,10 +30,15 @@ exports = module.exports = function (io) {
         // This returns, the name of the host & list of users in the room
         socket.on('playing',(room, username) => {
             games[room].addPlayer(username, socket.id)
+            
+            if (game[room].state === "inactive"){
+                game[room].state = "active"
+            }
 
             socket.emit("playing-resp",{
                 host: games[room].getHost(),
-                listOfPlayers: game[room].getListofPlayers()
+                listOfPlayers: game[room].getListofPlayers(),
+                state: game[room].state
             })
         })
 
