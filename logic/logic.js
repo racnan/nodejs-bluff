@@ -28,11 +28,14 @@ class Game {
     // and how many cards each player will get
     // host will also start the game
     getHost() {
+
+        var host = ""
         Object.entries(this.playing).forEach(player => {
             if (player[1].rank === 1) {
-                return player[1].username
+                host = player[1].username
             }
         })
+        return host
     }
 
     // returns number of players in room

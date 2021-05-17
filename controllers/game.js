@@ -2,6 +2,10 @@ const {
     Game
 } = require('../logic/logic')
 
+const {
+    USERS
+} = require('../data/users')
+
 const room1Game = new Game(state = "inactive")
 const room2Game = new Game(state = "inactive")
 const room3Game = new Game(state = "inactive")
@@ -12,34 +16,66 @@ const games = {
     "room3": room3Game,
 }
 
+// keeps the list of sockeID and their respective rooms 
+var socketAndRooms = []
+
 exports = module.exports = function (io) {
 
     io.on('connection', (socket) => {
 
-        console.log('conectted');
+
         // When a player enters the game it invokes "join",
         // and sends the "room" assigned to that user.
-        // this function sends state of that room  as 
-        // response.
-        socket.on('join', (room) => {
-            console.log('join')
-            socket.emit("join-resp", games[room].state)
-        })
- 
-        // When the room state is not "active", client will invoke "playing".
-        // This returns, the name of the host & list of users in the room
-        socket.on('playing',(room, username) => {
-            games[room].addPlayer(username, socket.id)
-            
-            if (game[room].state === "inactive"){
-                game[room].state = "active"
+        // this function sends state of that room, number
+        // of list of players in that room and host of the as response.
+        socket.on('join', (username) => {
+
+            var room = ""
+
+            for (var i = 0; i < USERS.length; i++) {
+                if (USERS[i].username === username) {
+                    room = USERS[i].room
+                }
             }
 
-            socket.emit("playing-resp",{
-                host: games[room].getHost(),
-                listOfPlayers: game[room].getListofPlayers(),
-                state: game[room].state
+            games[room].addPlayer(username, socket.id)
+
+            socket.join(room)
+
+            console.log( games[room].state,games[room].getListofPlayers(),games[room].getHost())
+            io.to(room).emit('join-resp', games[room].state,
+                games[room].getListofPlayers(),
+                games[room].getHost())
+
+            if (games[room].state === "inactive") {
+                games[room].state = "waiting"
+            }
+
+            socketAndRooms.push({
+                socketid: socket.id,
+                room: room
             })
+
+        })
+
+        //
+        socket.on('disconnect', () => {
+            var room = ""
+
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].socketid === socket.id) {
+                    room = socketAndRooms[i].room
+                    games[room].removePlayer(socket.id)
+                }
+            }
+
+            if (room) {
+                if (games[room].state === "waiting") {
+                    io.to(room).emit('join-resp', games[room].state,
+                        games[room].getListofPlayers(),
+                        games[room].getHost())
+                }
+            }
         })
 
     })

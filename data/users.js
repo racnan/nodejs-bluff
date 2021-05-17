@@ -6,19 +6,19 @@ const USERS = [{
         "username": "test1",
         "password": "abcabc",
         "cookie": "4p3UDAPGAmXYmHD",
-        "room": 1,
+        "room": "room1",
     },
     {
         "username": "test2",
         "password": "xyzxyz",
         "cookie": "NgHhWkrTMYgFplt",
-        "room": 2,
+        "room": "room1",
     },
     {
         "username": "test3",
         "password": "defdef",
         "cookie": "JCBlds0FxzKcCui",
-        "room": 1,
+        "room": "room1",
     },
 ]
 
