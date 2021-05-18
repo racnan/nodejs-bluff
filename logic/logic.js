@@ -21,6 +21,12 @@ class Game {
 
         this.playing = {}
 
+        // number of decks selected by the host
+        this.numberOfDecks = 1
+
+        // cards per player
+        this.cardsPerPlayer = 1
+
     }
 
     // host is the first user to visit the game.

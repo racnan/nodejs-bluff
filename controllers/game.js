@@ -38,27 +38,56 @@ exports = module.exports = function (io) {
                 }
             }
 
-            games[room].addPlayer(username, socket.id)
+            if (room) {
 
-            socket.join(room)
+                games[room].addPlayer(username, socket.id)
 
-            console.log( games[room].state,games[room].getListofPlayers(),games[room].getHost())
-            io.to(room).emit('join-resp', games[room].state,
-                games[room].getListofPlayers(),
-                games[room].getHost())
+                socket.join(room)
 
-            if (games[room].state === "inactive") {
-                games[room].state = "waiting"
+                io.to(room).emit('join-resp', games[room].state,
+                    games[room].getListofPlayers(),
+                    games[room].getHost(),
+                    games[room].numberOfDecks,
+                    games[room].cardsPerPlayer)
+
+                if (games[room].state === "inactive") {
+                    games[room].state = "waiting"
+                }
+
+                socketAndRooms.push({
+                    socketid: socket.id,
+                    room: room
+                })
             }
-
-            socketAndRooms.push({
-                socketid: socket.id,
-                room: room
-            })
 
         })
 
-        //
+        socket.on('update-decks', (data) => {
+
+            decks = data[0]
+            cardsPerPlayer = data[1]
+
+            var room = ""
+
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].socketid === socket.id) {
+                    room = socketAndRooms[i].room
+                    games[room].numberOfDecks = decks
+                    games[room].cardsPerPlayer = cardsPerPlayer
+                }
+            }
+
+            if (room) {
+                io.to(room).emit('join-resp', games[room].state,
+                    games[room].getListofPlayers(),
+                    games[room].getHost(),
+                    games[room].numberOfDecks,
+                    games[room].cardsPerPlayer)
+            }
+
+        })
+
+        // when player leaves the room
         socket.on('disconnect', () => {
             var room = ""
 
@@ -73,7 +102,9 @@ exports = module.exports = function (io) {
                 if (games[room].state === "waiting") {
                     io.to(room).emit('join-resp', games[room].state,
                         games[room].getListofPlayers(),
-                        games[room].getHost())
+                        games[room].getHost(),
+                        games[room].numberOfDecks,
+                        games[room].cardsPerPlayer)
                 }
             }
         })
