@@ -11,14 +11,13 @@ class Game {
         // playing contains socketid as key with username 
         // and rank as value
         /* {
-            socketid : {
-                username:username,
+            username : {
+                socketID:socketid,
                 rank: 1
             },
         } */
         // host has rank = 1, when host leaves the game rank = 2
         // is considered host
-
         this.playing = {}
 
         // number of decks selected by the host
@@ -34,13 +33,14 @@ class Game {
     // and how many cards each player will get
     // host will also start the game
     getHost() {
-
         var host = ""
+
         Object.entries(this.playing).forEach(player => {
             if (player[1].rank === 1) {
-                host = player[1].username
+                host = player[0]
             }
         })
+
         return host
     }
 
@@ -54,7 +54,7 @@ class Game {
         var list = []
 
         Object.entries(this.playing).forEach(player => {
-            list.push(player[1].username)
+            list.push(player[0])
         })
 
         return list
@@ -64,16 +64,23 @@ class Game {
     // with socket.id as the key
     addPlayer(name, socketid) {
         var size = Object.keys(this.playing).length;
-        this.playing[socketid] = {
-            username: name,
+        this.playing[name] = {
+            socketID: socketid,
             rank: size + 1
         }
     }
 
-    //removes the username from the playing array
-    // by their key
+    // removes the user from the playing array
     removePlayer(socketid) {
-        var rank = this.playing[socketid].rank
+        var user = ""
+
+        Object.entries(this.playing).forEach(player => {
+            if (player[1].socketID === socketid) {
+                user = player[0]
+            }
+        })
+
+        var rank = this.playing[user].rank
 
         // if rank = 1 is dissconnected, this will increase rank of 
         // every other user. So, rank = 2 will be now be rank = 1 
@@ -90,13 +97,48 @@ class Game {
             })
         }
 
-        delete this.playing[socketid];
+        delete this.playing[user];
     }
 
+    updateSocketID(username, socketid) {
+        this.playing[username].socketID = socketid
+    }
 
+    // generates an array with numbers between 0-52
+    // where each number represents a card
+    newShuffledDeck() {
+        var shuffledDeck = [];
+
+        // generating the deck
+        for (let i = 0; i < this.numberOfDecks; i++) {
+            for (var j = 0; j <= 52; j++) shuffledDeck.push(j);
+        }
+
+        // shuffling the deck
+        shuffledDeck = shuffledDeck.sort(() => Math.random() - 0.5);
+
+        this.deck = shuffledDeck
+    }
+
+    // assigns deck to the provided user
+    assignDeck(username) {
+        var deck = []
+
+        for (let i = 0; i < this.cardsPerPlayer; i++) {
+            deck.push(this.deck.pop())
+        }
+
+        this.playing[username].deck = deck
+    }
 
 }
 
+const room1Game = new Game(state = "inactive")
+const room2Game = new Game(state = "inactive")
+const room3Game = new Game(state = "inactive")
+
 module.exports = {
-    Game
+    room1Game,
+    room2Game,
+    room3Game
 }

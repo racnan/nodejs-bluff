@@ -10,8 +10,10 @@ const server = http.createServer(app)
 const io = socketio(server)
 
 const roomNamespace = io.of('/room')
+const gameNamespace = io.of('/game')
 
-const _ = require('./controllers/game')(roomNamespace)
+const _ = require('./controllers/room')(roomNamespace)
+const __ = require('./controllers/mainGame')(gameNamespace)
 const userRouter = require('./controllers/users')
 
 const PORT = 3000
