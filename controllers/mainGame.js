@@ -38,39 +38,23 @@ exports = module.exports = function (io) {
             if (room) {
 
                 socket.join(room)
- 
+
                 socketAndRooms.push({
                     socketid: socket.id,
                     room: room
                 })
 
-                games[room].updateSocketID(username,socket.id)
+                games[room].updateSocketID(username, socket.id)
                 games[room].assignDeck(username)
-
-                // io.to(room).emit('intialize-resp',games[room].)
+                console.log(games[room].playing)
+                games[room].arrangeDeck(username)
+                console.log(games[room].playing)
+                console.log(games[room].generateGameList())
+                io.to(room).emit('intialize-resp', games[room].generateGameList())
             }
         })
 
         // when player leaves the room
-        socket.on('disconnect', () => {
-            var room = ""
-
-            for (var i = 0; i < socketAndRooms.length; i++) {
-                if (socketAndRooms[i].socketid === socket.id) {
-                    room = socketAndRooms[i].room
-                    games[room].removePlayer(socket.id)
-                }
-            }
-
-            if (room) {
-                if (games[room].state === "waiting") {
-                    io.to(room).emit('join-resp', games[room].state,
-                        games[room].getListofPlayers(),
-                        games[room].getHost(),
-                        games[room].numberOfDecks,
-                        games[room].cardsPerPlayer)
-                }
-            }
-        })
+        socket.on('disconnect', () => {})
     })
 }

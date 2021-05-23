@@ -129,6 +129,63 @@ class Game {
         }
 
         this.playing[username].deck = deck
+        this.playing[username].turn = this.playing[username].rank
+    }
+
+    // returns list with users arranged according to turn
+    // and cards left
+    generateGameList() {
+        var list = []
+
+        for (let i = 0; i < Object.keys(this.playing).length; i++) {
+            Object.entries(this.playing).forEach(player => {
+                if (player[1].turn === i + 1) {
+
+                    // push [name, cardsleft]
+                    list.push([player[0], player[1].deck.length])
+                }
+            })
+        }
+
+        return list
+    }
+
+    // arrange the decks, 1's will be first then 2's ...
+    arrangeDeck(username) {
+        var tempdeck = [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+        var newdeck = []
+
+        this.playing[username].deck.forEach((card) => {
+            for (let i = 0; i < 13; i++) {
+                if (card === i + 1 || card === i + 14 || card === i + 27 || card === i + 40) {
+                    tempdeck[i].push(card)
+                    continue
+                }
+            }
+        })
+        for (let i = 0; i < 13; i++) {
+            if (tempdeck[i].length !== 0) {
+                tempdeck[i].forEach((card) => {
+                    newdeck.push(card)
+                })
+            }
+        }
+        this.playing[username].deck = newdeck
+
     }
 
 }
