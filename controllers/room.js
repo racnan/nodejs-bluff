@@ -105,7 +105,7 @@ exports = module.exports = function (io) {
 
             if (room) {
                 started = true
-                games[room].state = "inactive"
+                games[room].state = "active"
                 games[room].newShuffledDeck()
                 io.to(room).emit('start-resp')
             }

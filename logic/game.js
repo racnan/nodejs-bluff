@@ -14,6 +14,10 @@ class Game {
             username : {
                 socketID:socketid,
                 rank: 1
+                initialized : bool
+                turn: 
+                deck:
+                orderedDeck
             },
         } */
         // host has rank = 1, when host leaves the game rank = 2
@@ -25,6 +29,11 @@ class Game {
 
         // cards per player
         this.cardsPerPlayer = 1
+
+        // OTHER PROPERTIES
+        // this.mainDeck : main shuffled deck of the game
+
+
 
     }
 
@@ -66,7 +75,8 @@ class Game {
         var size = Object.keys(this.playing).length;
         this.playing[name] = {
             socketID: socketid,
-            rank: size + 1
+            rank: size + 1,
+            initialized: false
         }
     }
 
@@ -117,7 +127,7 @@ class Game {
         // shuffling the deck
         shuffledDeck = shuffledDeck.sort(() => Math.random() - 0.5);
 
-        this.deck = shuffledDeck
+        this.mainDeck = shuffledDeck
     }
 
     // assigns deck to the provided user
@@ -125,7 +135,7 @@ class Game {
         var deck = []
 
         for (let i = 0; i < this.cardsPerPlayer; i++) {
-            deck.push(this.deck.pop())
+            deck.push(this.mainDeck.pop())
         }
 
         this.playing[username].deck = deck
@@ -134,7 +144,7 @@ class Game {
 
     // returns list with users arranged according to turn
     // and cards left
-    generateGameList() {
+    usersAndCardsLeft() {
         var list = []
 
         for (let i = 0; i < Object.keys(this.playing).length; i++) {
@@ -167,7 +177,8 @@ class Game {
             [],
             []
         ]
-        var newdeck = []
+        var arrangedDeck = []
+        var orderedDeck = []
 
         this.playing[username].deck.forEach((card) => {
             for (let i = 0; i < 13; i++) {
@@ -180,12 +191,25 @@ class Game {
         for (let i = 0; i < 13; i++) {
             if (tempdeck[i].length !== 0) {
                 tempdeck[i].forEach((card) => {
-                    newdeck.push(card)
+                    arrangedDeck.push(card)
                 })
+                orderedDeck.push([i, tempdeck[i]])
             }
         }
-        this.playing[username].deck = newdeck
+        this.playing[username].deck = arrangedDeck
+        this.playing[username].orderedDeck = orderedDeck
 
+    }
+
+    // returns username
+    currentTurn() {
+        var currTurn = ""
+        Object.entries(this.playing).forEach((player) => {
+            if (player[1].turn === 1) {
+                currTurn = player[0]
+            }
+        })
+        return currTurn
     }
 
 }

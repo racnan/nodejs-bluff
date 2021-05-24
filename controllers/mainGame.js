@@ -20,11 +20,10 @@ var socketAndRooms = []
 exports = module.exports = function (io) {
 
     io.on('connection', (socket) => {
+        console.log(socket.id)
 
-        // When a player enters the game it invokes "join",
-        // and sends the "room" assigned to that user.
-        // this function sends state of that room, number
-        // of list of players in that room and host of the as response.
+        // When a player enters the game it invokes "intialize",
+        // and sends the "username" assigned to that user.
         socket.on('intialize', (username) => {
 
             var room = ""
@@ -37,20 +36,37 @@ exports = module.exports = function (io) {
 
             if (room) {
 
-                socket.join(room)
+                if (!games[room].playing[username].initialized) {
+                    console.log(games[room])
+                    socket.join(room)
 
-                socketAndRooms.push({
-                    socketid: socket.id,
-                    room: room
-                })
+                    socketAndRooms.push({
+                        socketid: socket.id,
+                        room: room,
+                        name: username
+                    })
 
-                games[room].updateSocketID(username, socket.id)
-                games[room].assignDeck(username)
-                console.log(games[room].playing)
-                games[room].arrangeDeck(username)
-                console.log(games[room].playing)
-                console.log(games[room].generateGameList())
-                io.to(room).emit('intialize-resp', games[room].generateGameList())
+                    games[room].updateSocketID(username, socket.id)
+                    games[room].assignDeck(username)
+                    games[room].arrangeDeck(username)
+                    games[room].playing[username].initialized = true
+
+
+                    io.to(room).emit('intialize-resp',
+                        games[room].usersAndCardsLeft(),
+                        games[room].playing[username].deck,
+                        games[room].playing[username].orderedDeck,
+                        games[room].currentTurn())
+                }
+                else {
+                    games[room].playing[username].socketID = socket.id
+
+                    io.to(room).emit('intialize-resp',
+                        games[room].usersAndCardsLeft(),
+                        games[room].playing[username].deck,
+                        games[room].playing[username].orderedDeck,
+                        games[room].currentTurn())
+                }
             }
         })
 
