@@ -18,7 +18,7 @@ const USERS = [{
         "username": "test3",
         "password": "defdef",
         "cookie": "JCBlds0FxzKcCui",
-        "room": "room1",
+        "room": "room2",
     },
 ]
 

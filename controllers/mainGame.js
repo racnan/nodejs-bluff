@@ -20,7 +20,7 @@ var socketAndRooms = []
 exports = module.exports = function (io) {
 
     io.on('connection', (socket) => {
-        console.log(socket.id)
+        console.log("MG: ",socket.id)
 
         // When a player enters the game it invokes "intialize",
         // and sends the "username" assigned to that user.
@@ -37,7 +37,7 @@ exports = module.exports = function (io) {
             if (room) {
 
                 if (!games[room].playing[username].initialized) {
-                    console.log(games[room])
+                    // console.log(games[room])
                     socket.join(room)
 
                     socketAndRooms.push({

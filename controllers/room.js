@@ -19,7 +19,11 @@ const games = {
 var socketAndRooms = []
 
 // if started is true, then the 
-var started = false;
+var started = {
+    "room1": false,
+    "room2": false,
+    "room3": false,
+};
 
 exports = module.exports = function (io) {
 
@@ -41,72 +45,89 @@ exports = module.exports = function (io) {
 
             if (room) {
 
-                games[room].addPlayer(username, socket.id)
+                if (!games[room].playing[username]) {
+                    // if there is no such user in the game,
+                    // i.e. user has joined for the first time
 
-                socket.join(room)
+                    // add user to the "playing" object
+                    games[room].addPlayer(username, socket.id)
+
+                    socket.join(room)
+
+                    socketAndRooms.push({
+                        socketid: socket.id,
+                        room: room
+                    })
+
+                    io.to(room).emit('join-resp', games[room].state,
+                        games[room].getListofPlayers(),
+                        games[room].getHost(),
+                        games[room].numberOfDecks,
+                        games[room].cardsPerPlayer)
+
+                    if (games[room].state === "inactive") {
+                        games[room].state = "waiting"
+                    }
+
+                } else {
+                    // if the user has already joined the game but
+                    // is sending 'join' request again.
+                    // this shouldn't happen normally
+
+                    games[room].playing[username].socketID = socket.id
+
+                    io.to(room).emit('join-resp', games[room].state,
+                        games[room].getListofPlayers(),
+                        games[room].getHost(),
+                        games[room].numberOfDecks,
+                        games[room].cardsPerPlayer)
+                }
+            }
+        })
+
+        socket.on('update-decks', (username, decks, cardsPerPlayer) => {
+
+            var room = ""
+
+            for (var i = 0; i < USERS.length; i++) {
+                if (USERS[i].username === username) {
+                    room = USERS[i].room
+                }
+            }
+
+            if (room) {
+                games[room].numberOfDecks = decks
+                games[room].cardsPerPlayer = cardsPerPlayer
 
                 io.to(room).emit('join-resp', games[room].state,
                     games[room].getListofPlayers(),
                     games[room].getHost(),
                     games[room].numberOfDecks,
                     games[room].cardsPerPlayer)
-
-                if (games[room].state === "inactive") {
-                    games[room].state = "waiting"
-                }
-
-                socketAndRooms.push({
-                    socketid: socket.id,
-                    room: room
-                })
             }
 
         })
 
-        socket.on('update-decks', (data) => {
-
-            decks = data[0]
-            cardsPerPlayer = data[1]
+        socket.on('start', (username, decks, cardsPerPlayer) => {
 
             var room = ""
 
-            for (var i = 0; i < socketAndRooms.length; i++) {
-                if (socketAndRooms[i].socketid === socket.id) {
-                    room = socketAndRooms[i].room
-                    games[room].numberOfDecks = decks
-                    games[room].cardsPerPlayer = cardsPerPlayer
+            for (var i = 0; i < USERS.length; i++) {
+                if (USERS[i].username === username) {
+                    room = USERS[i].room
+                    break
                 }
             }
 
             if (room) {
-                io.to(room).emit('join-resp', games[room].state,
-                    games[room].getListofPlayers(),
-                    games[room].getHost(),
-                    games[room].numberOfDecks,
-                    games[room].cardsPerPlayer)
-            }
+                games[room].numberOfDecks = decks
+                games[room].cardsPerPlayer = cardsPerPlayer
 
-        })
-
-        socket.on('start', (data) => {
-
-            decks = data[0]
-            cardsPerPlayer = data[1]
-
-            var room = ""
-
-            for (var i = 0; i < socketAndRooms.length; i++) {
-                if (socketAndRooms[i].socketid === socket.id) {
-                    room = socketAndRooms[i].room
-                    games[room].numberOfDecks = decks
-                    games[room].cardsPerPlayer = cardsPerPlayer
-                }
-            }
-
-            if (room) {
-                started = true
+                started[room] = true
                 games[room].state = "active"
+
                 games[room].newShuffledDeck()
+
                 io.to(room).emit('start-resp')
             }
 
@@ -114,17 +135,23 @@ exports = module.exports = function (io) {
 
         // when player leaves the room
         socket.on('disconnect', () => {
-            if (!started) {
-                var room = ""
 
-                for (var i = 0; i < socketAndRooms.length; i++) {
-                    if (socketAndRooms[i].socketid === socket.id) {
-                        room = socketAndRooms[i].room
-                        games[room].removePlayer(socket.id)
-                    }
+            var room = ""
+
+            // find the room which was associated with the socket.id
+            // that has dissconnected
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].socketid === socket.id) {
+                    room = socketAndRooms[i].room
                 }
+            }
 
-                if (room) {
+            if (room) {
+
+                if (games[room].state !== "active") {
+
+                    games[room].removePlayer(socket.id)
+
                     if (games[room].state === "waiting") {
                         io.to(room).emit('join-resp', games[room].state,
                             games[room].getListofPlayers(),
