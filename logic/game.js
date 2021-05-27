@@ -193,7 +193,7 @@ class Game {
                 tempdeck[i].forEach((card) => {
                     arrangedDeck.push(card)
                 })
-                orderedDeck.push([i, tempdeck[i]])
+                orderedDeck.push([i, tempdeck[i].length])
             }
         }
         this.playing[username].deck = arrangedDeck

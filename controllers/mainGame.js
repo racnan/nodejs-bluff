@@ -67,6 +67,7 @@ exports = module.exports = function (io) {
                         games[room].playing[username].orderedDeck,
                         games[room].currentTurn())
                 }
+                console.log(games[room].playing[username].orderedDeck)
             }
         })
 

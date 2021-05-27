@@ -15,15 +15,9 @@ const games = {
     "room3": room3Game,
 }
 
-// keeps the list of socketID and their respective rooms 
+// keeps the list of socketID and their respective rooms with username 
 var socketAndRooms = []
 
-// if started is true, then the 
-var started = {
-    "room1": false,
-    "room2": false,
-    "room3": false,
-};
 
 exports = module.exports = function (io) {
 
@@ -56,7 +50,8 @@ exports = module.exports = function (io) {
 
                     socketAndRooms.push({
                         socketid: socket.id,
-                        room: room
+                        room: room,
+                        username: username
                     })
 
                     io.to(room).emit('join-resp', games[room].state,
@@ -123,7 +118,6 @@ exports = module.exports = function (io) {
                 games[room].numberOfDecks = decks
                 games[room].cardsPerPlayer = cardsPerPlayer
 
-                started[room] = true
                 games[room].state = "active"
 
                 games[room].newShuffledDeck()
@@ -137,18 +131,27 @@ exports = module.exports = function (io) {
         socket.on('disconnect', () => {
 
             var room = ""
+            var user = ""
 
             // find the room which was associated with the socket.id
             // that has dissconnected
             for (var i = 0; i < socketAndRooms.length; i++) {
                 if (socketAndRooms[i].socketid === socket.id) {
                     room = socketAndRooms[i].room
+                    user = socketAndRooms[i].username
                 }
             }
 
             if (room) {
 
                 if (games[room].state !== "active") {
+
+                    // change the user's loggedin to false
+                    for (var i = 0; i < USERS.length; i++) {
+                        if (USERS[i].username === user) {
+                            USERS[i].isLoggedIn = false
+                        }
+                    }
 
                     games[room].removePlayer(socket.id)
 

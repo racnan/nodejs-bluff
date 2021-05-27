@@ -7,18 +7,21 @@ const USERS = [{
         "password": "abcabc",
         "cookie": "4p3UDAPGAmXYmHD",
         "room": "room1",
+        "isLoggedIn": false,
     },
     {
         "username": "test2",
         "password": "xyzxyz",
         "cookie": "NgHhWkrTMYgFplt",
         "room": "room1",
+        "isLoggedIn": false,
     },
     {
         "username": "test3",
         "password": "defdef",
         "cookie": "JCBlds0FxzKcCui",
         "room": "room2",
+        "isLoggedIn": false,
     },
 ]
 
