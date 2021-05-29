@@ -54,7 +54,7 @@ exports = module.exports = function (io) {
                         username: username
                     })
 
-                    io.to(room).emit('join-resp', games[room].state,
+                    io.in(room).emit('join-resp', games[room].state,
                         games[room].getListofPlayers(),
                         games[room].getHost(),
                         games[room].numberOfDecks,
@@ -71,7 +71,7 @@ exports = module.exports = function (io) {
 
                     games[room].playing[username].socketID = socket.id
 
-                    io.to(room).emit('join-resp', games[room].state,
+                    io.in(room).emit('join-resp', games[room].state,
                         games[room].getListofPlayers(),
                         games[room].getHost(),
                         games[room].numberOfDecks,
@@ -94,7 +94,7 @@ exports = module.exports = function (io) {
                 games[room].numberOfDecks = decks
                 games[room].cardsPerPlayer = cardsPerPlayer
 
-                io.to(room).emit('join-resp', games[room].state,
+                io.in(room).emit('join-resp', games[room].state,
                     games[room].getListofPlayers(),
                     games[room].getHost(),
                     games[room].numberOfDecks,
@@ -122,7 +122,7 @@ exports = module.exports = function (io) {
 
                 games[room].newShuffledDeck()
 
-                io.to(room).emit('start-resp')
+                io.in(room).emit('start-resp')
             }
 
         })
@@ -156,7 +156,7 @@ exports = module.exports = function (io) {
                     games[room].removePlayer(socket.id)
 
                     if (games[room].state === "waiting") {
-                        io.to(room).emit('join-resp', games[room].state,
+                        io.in(room).emit('join-resp', games[room].state,
                             games[room].getListofPlayers(),
                             games[room].getHost(),
                             games[room].numberOfDecks,

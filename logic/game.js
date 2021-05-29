@@ -32,6 +32,7 @@ class Game {
 
         // OTHER PROPERTIES
         // this.mainDeck : main shuffled deck of the game
+        // this.currentChaal
 
 
 

@@ -52,7 +52,7 @@ exports = module.exports = function (io) {
                     games[room].playing[username].initialized = true
 
 
-                    io.to(room).emit('intialize-resp',
+                    io.in(room).emit('intialize-resp',
                         games[room].usersAndCardsLeft(),
                         games[room].playing[username].deck,
                         games[room].playing[username].orderedDeck,
@@ -61,7 +61,7 @@ exports = module.exports = function (io) {
                 else {
                     games[room].playing[username].socketID = socket.id
 
-                    io.to(room).emit('intialize-resp',
+                    io.in(room).emit('intialize-resp',
                         games[room].usersAndCardsLeft(),
                         games[room].playing[username].deck,
                         games[room].playing[username].orderedDeck,
@@ -69,6 +69,23 @@ exports = module.exports = function (io) {
                 }
                 console.log(games[room].playing[username].orderedDeck)
             }
+        })
+
+        socket.on('chaal-select',(chaal) => {
+
+            var room = ""
+
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].socketid === socket.id) {
+                    room = socketAndRooms[i].room
+                }
+            }
+            
+            if (room){
+                games[room].playing.currentChaal = chaal
+                socket.to(room).emit('chaal-select-resp',chaal)
+            }
+
         })
 
         // when player leaves the room
