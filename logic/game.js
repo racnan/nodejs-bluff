@@ -33,6 +33,8 @@ class Game {
         // OTHER PROPERTIES
         // this.mainDeck : main shuffled deck of the game
         // this.currentChaal
+        // this.roundDeck : the deck of all the cards played in a round
+        // this.lastChaal : {user: "test1", play: bluff}
 
 
 
@@ -111,10 +113,6 @@ class Game {
         delete this.playing[user];
     }
 
-    updateSocketID(username, socketid) {
-        this.playing[username].socketID = socketid
-    }
-
     // generates an array with numbers between 0-52
     // where each number represents a card
     newShuffledDeck() {
@@ -122,13 +120,16 @@ class Game {
 
         // generating the deck
         for (let i = 0; i < this.numberOfDecks; i++) {
-            for (var j = 0; j <= 52; j++) shuffledDeck.push(j);
+            for (var j = 0; j < 52; j++) shuffledDeck.push(j);
         }
 
         // shuffling the deck
         shuffledDeck = shuffledDeck.sort(() => Math.random() - 0.5);
 
         this.mainDeck = shuffledDeck
+
+        // create roundDeck
+        this.roundDeck = []
     }
 
     // assigns deck to the provided user
@@ -211,6 +212,57 @@ class Game {
             }
         })
         return currTurn
+    }
+
+    isFirstTurn() {
+        if (this.roundDeck.length === 0) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    // update the ranks
+    rearrangeUsersAndCardsLeft() {
+        Object.entries(this.playing).forEach(player => {
+            if (player[1].rank === 1) {
+                player[1].rank = Object.keys(this.playing).length;
+            } else {
+                --player[1].rank
+            }
+        })
+
+    }
+
+    // when bluff is played
+    playBluff(username, listOfIndex) {
+
+        // remove card from the user deck and add it to the round deck
+        for (var i = 0; i < listOfIndex.length; i++) {
+            this.roundDeck.push(this.playing[username].deck.splice(listOfIndex[i]))
+        }
+
+        this.lastChaal = {
+            user: username,
+            play: "bluff"
+        }
+
+    }
+
+    playFair(username, quantity) {
+
+        // remove card from the user deck and add it to the round deck
+        var i = 0
+        var j = 0
+        while (j < quantity) {
+            if (this.playing[username].deck[i] === this.currentChaal) {
+                this.roundDeck.push(this.playing[username].deck.splice(i, 1));
+                j++
+            } else {
+                i++;
+            }
+        }
+
     }
 
 }
