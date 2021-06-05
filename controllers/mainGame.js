@@ -14,18 +14,18 @@ const games = {
     "room3": room3Game,
 }
 
-// keeps the list of sockeID and their respective rooms 
+// keeps the list of sockeID, username  and their respective rooms 
 var socketAndRooms = []
 
 exports = module.exports = function (io) {
 
     io.on('connection', (socket) => {
-        console.log("MG: ", socket.id)
+        console.log("MG: conn", socket.id)
 
         // When a player enters the game it invokes "intialize",
         // and sends the "username" assigned to that user.
         socket.on('intialize', (username) => {
-
+            console.log("MG: init ", socket.id)
             var room = ""
 
             // finds the room of the user using username provided
@@ -47,7 +47,7 @@ exports = module.exports = function (io) {
                     socketAndRooms.push({
                         socketid: socket.id,
                         room: room,
-                        name: username
+                        username: username
                     })
 
                     // update the socketid
@@ -73,7 +73,7 @@ exports = module.exports = function (io) {
                     // update the socketid
                     games[room].playing[username].socketID = socket.id
                     socketAndRooms.forEach((user) => {
-                        if (user.name === username) {
+                        if (user.username === username) {
                             user.socketid = socket.id
                         }
                     })
@@ -100,7 +100,7 @@ exports = module.exports = function (io) {
             }
 
             if (room) {
-                games[room].playing.currentChaal = chaal
+                games[room].currentChaal = chaal
 
                 // send to everyone except the sender
                 socket.to(room).emit('chaal-select-resp', chaal)
@@ -109,17 +109,18 @@ exports = module.exports = function (io) {
         })
 
         socket.on('played-bluff', (cardIndex) => {
-
+            console.log(cardIndex)
             var room = ""
             var username = ""
-
+            
             // find the username and room by socketid
             for (var i = 0; i < socketAndRooms.length; i++) {
                 if (socketAndRooms[i].socketid === socket.id) {
                     room = socketAndRooms[i].room
-                    username = socketAndRooms[i].name
+                    username = socketAndRooms[i].username
                 }
             }
+            console.log("RS: bluff1 ", games[room])
 
             games[room].playBluff(username, cardIndex)
             games[room].arrangeDeck(username)
@@ -136,7 +137,7 @@ exports = module.exports = function (io) {
                 games[room].usersAndCardsLeft(),
                 games[room].currentTurn(),
                 games[room].isFirstTurn())
-
+                console.log("RS: bluff ", games[room])
         })
 
         socket.on('played-fair', (quantity) => {
@@ -148,7 +149,7 @@ exports = module.exports = function (io) {
             for (var i = 0; i < socketAndRooms.length; i++) {
                 if (socketAndRooms[i].socketid === socket.id) {
                     room = socketAndRooms[i].room
-                    username = socketAndRooms[i].name
+                    username = socketAndRooms[i].username
                 }
             }
 
@@ -170,7 +171,94 @@ exports = module.exports = function (io) {
 
         })
 
+        // when idle, the sockets dissconnect and then reconnects automatically
+        // this function will update the socketid of the username
+        socket.on("reconnectt", (username) => {
+            console.log("MG: reconn")
+
+            var room = ""
+
+            // finds the room of the user using socketid
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].username === username) {
+                    room = socketAndRooms[i].room
+                    socketAndRooms[i].socketid = socket.id
+                }
+            }
+
+            if (room) {
+                // update the socketid
+                games[room].playing[username].socketID = socket.id
+                console.log(games[room].playing)
+            }
+        })
+
         // when player leaves the room
-        socket.on('disconnect', () => {})
+        socket.on('disconnect', () => {
+            console.log("RS: diss ", socket.id)
+            var room = ""
+            var user = ""
+
+            // find the room which was associated with the socket.id
+            // that has dissconnected
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].socketid === socket.id) {
+                    room = socketAndRooms[i].room
+                    user = socketAndRooms[i].username
+                }
+            }
+
+            if (room) {
+                setTimeout(() => removePlayer(user, socket.id, room), 5000);
+            }
+        })
     })
+
+    function removePlayer(username, socketID, room) {
+        // if the player is dissconnected and doesn't reconnects after 10 seconds.
+        // the player will be removed from the game.
+        console.log("RS: remove function");
+
+        var isReconnected = true;
+
+        // if the username and socketid is not updated, this shows that the user has not reconnected
+        for (var i = 0; i < socketAndRooms.length; i++) {
+            if (socketAndRooms[i].socketid === socketID && socketAndRooms[i].username === username) {
+                console.log("RS: ", socketAndRooms)
+                isReconnected = false
+            }
+        }
+
+        // if user has not reconnected, remove the user
+        if (!isReconnected) {
+            // change the user's loggedin to false
+            for (var i = 0; i < USERS.length; i++) {
+                if (USERS[i].username === username) {
+                    USERS[i].isLoggedIn = false
+                }
+            }
+
+            games[room].removePlayer(socketID)
+
+            if (games[room].getListofPlayers().length === 0) {
+                // when everyone has left the game
+
+                games[room].state = "inactive"
+                
+
+            } else {
+
+                if (games[room].state === "active") {
+                    io.in(room).emit('join-resp', games[room].state,
+                        games[room].getListofPlayers(),
+                        games[room].getHost(),
+                        games[room].numberOfDecks,
+                        games[room].cardsPerPlayer)
+                }
+
+            }
+    
+        }
+    };
+
 }

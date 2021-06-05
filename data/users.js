@@ -20,7 +20,7 @@ const USERS = [{
         "username": "test3",
         "password": "defdef",
         "cookie": "JCBlds0FxzKcCui",
-        "room": "room2",
+        "room": "room1",
         "isLoggedIn": false,
     },
 ]

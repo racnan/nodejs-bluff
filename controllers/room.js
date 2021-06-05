@@ -22,6 +22,7 @@ var socketAndRooms = []
 exports = module.exports = function (io) {
 
     io.on('connection', (socket) => {
+        console.log("RS: ", socket.id)
 
         // When a player enters the game it invokes "join",
         // and sends the "room" assigned to that user.
@@ -127,8 +128,31 @@ exports = module.exports = function (io) {
 
         })
 
+        // when idle, the sockets dissconnect and then reconnects automatically
+        // this function will update the socketid of the username
+        socket.on("reconnectt", (username) => {
+            console.log("RS: reconnect")
+
+            var room = ""
+
+            // finds the room of the user using username
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].username === username) {
+                    room = socketAndRooms[i].room
+                    socketAndRooms[i].socketid = socket.id
+                }
+            }
+
+            if (room) {
+                // update the socketid
+                games[room].playing[username].socketID = socket.id
+            }
+            console.log("RS: re ", socketAndRooms)
+        })
+
         // when player leaves the room
         socket.on('disconnect', () => {
+            console.log("RS: diss ", socket.id)
 
             var room = ""
             var user = ""
@@ -145,25 +169,54 @@ exports = module.exports = function (io) {
             if (room) {
 
                 if (games[room].state !== "active") {
-
-                    // change the user's loggedin to false
-                    for (var i = 0; i < USERS.length; i++) {
-                        if (USERS[i].username === user) {
-                            USERS[i].isLoggedIn = false
-                        }
-                    }
-
-                    games[room].removePlayer(socket.id)
-
-                    if (games[room].state === "waiting") {
-                        io.in(room).emit('join-resp', games[room].state,
-                            games[room].getListofPlayers(),
-                            games[room].getHost(),
-                            games[room].numberOfDecks,
-                            games[room].cardsPerPlayer)
-                    }
+                    setTimeout(() => removePlayer(user, socket.id, room), 5000);
                 }
             }
         })
     })
+
+    function removePlayer(username, socketID, room) {
+        // if the player is dissconnected and doesn't reconnects after 10 seconds.
+        // the player will be removed from the game.
+        console.log("RS: remove function");
+
+        var isReconnected = true;
+
+        // if the username and socketid is not updated, this shows that the user has not reconnected
+        for (var i = 0; i < socketAndRooms.length; i++) {
+            if (socketAndRooms[i].socketid === socketID && socketAndRooms[i].username === username) {
+                console.log("RS: ", socketAndRooms)
+                isReconnected = false
+            }
+        }
+
+        // if user has not reconnected, remove the user
+        if (!isReconnected) {
+            // change the user's loggedin to false
+            for (var i = 0; i < USERS.length; i++) {
+                if (USERS[i].username === username) {
+                    USERS[i].isLoggedIn = false
+                }
+            }
+
+            games[room].removePlayer(socketID)
+
+            if (games[room].getListofPlayers().length === 0) {
+
+                games[room].state = "inactive"
+
+            } else {
+
+                if (games[room].state === "waiting") {
+                    io.in(room).emit('join-resp', games[room].state,
+                        games[room].getListofPlayers(),
+                        games[room].getHost(),
+                        games[room].numberOfDecks,
+                        games[room].cardsPerPlayer)
+                }
+            }
+            console.log("RS: remove ", games[room])
+        }
+    };
+
 }

@@ -32,11 +32,9 @@ class Game {
 
         // OTHER PROPERTIES
         // this.mainDeck : main shuffled deck of the game
-        // this.currentChaal
         // this.roundDeck : the deck of all the cards played in a round
+        // this.currentChaal
         // this.lastChaal : {user: "test1", play: bluff}
-
-
 
     }
 
@@ -225,6 +223,7 @@ class Game {
     // update the ranks
     rearrangeUsersAndCardsLeft() {
         Object.entries(this.playing).forEach(player => {
+            console.log("players ", player)
             if (player[1].rank === 1) {
                 player[1].rank = Object.keys(this.playing).length;
             } else {
@@ -239,7 +238,20 @@ class Game {
 
         // remove card from the user deck and add it to the round deck
         for (var i = 0; i < listOfIndex.length; i++) {
-            this.roundDeck.push(this.playing[username].deck.splice(listOfIndex[i]))
+            this.roundDeck.push(this.playing[username].deck[listOfIndex[i]])
+            // later, all the 99 while be removed
+            this.playing[username].deck[listOfIndex[i]] = 99;
+        }
+
+        var i = 0
+        var j = 0
+        while (j < listOfIndex.length) {
+            if (this.playing[username].deck[i] === 99) {
+                this.playing[username].deck.splice(i, 1);
+                j++
+            } else {
+                i++;
+            }
         }
 
         this.lastChaal = {
