@@ -109,7 +109,7 @@ exports = module.exports = function (io) {
         })
 
         socket.on('played-bluff', (cardIndex) => {
-            console.log(cardIndex)
+        
             var room = ""
             var username = ""
             
@@ -120,7 +120,6 @@ exports = module.exports = function (io) {
                     username = socketAndRooms[i].username
                 }
             }
-            console.log("RS: bluff1 ", games[room])
 
             games[room].playBluff(username, cardIndex)
             games[room].arrangeDeck(username)
@@ -137,7 +136,6 @@ exports = module.exports = function (io) {
                 games[room].usersAndCardsLeft(),
                 games[room].currentTurn(),
                 games[room].isFirstTurn())
-                console.log("RS: bluff ", games[room])
         })
 
         socket.on('played-fair', (quantity) => {

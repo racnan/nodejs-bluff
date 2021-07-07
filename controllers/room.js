@@ -24,6 +24,8 @@ exports = module.exports = function (io) {
     io.on('connection', (socket) => {
         console.log("RS: ", socket.id)
 
+        socket.on('ping',()=>console.log("ping"))
+        socket.on('pong',()=>console.log("pong"))
         // When a player enters the game it invokes "join",
         // and sends the "room" assigned to that user.
         // this function sends state of that room, number

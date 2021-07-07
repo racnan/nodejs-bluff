@@ -222,15 +222,15 @@ class Game {
 
     // update the ranks
     rearrangeUsersAndCardsLeft() {
+        console.log(this.playing)
         Object.entries(this.playing).forEach(player => {
-            console.log("players ", player)
-            if (player[1].rank === 1) {
-                player[1].rank = Object.keys(this.playing).length;
+            if (player[1].turn === 1) {
+                player[1].turn = Object.keys(this.playing).length;
             } else {
-                --player[1].rank
+                --player[1].turn
             }
         })
-
+        console.log(this.playing)
     }
 
     // when bluff is played
