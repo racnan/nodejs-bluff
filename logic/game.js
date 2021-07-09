@@ -30,12 +30,16 @@ class Game {
         // cards per player
         this.cardsPerPlayer = 1
 
+        this.lastChaal = {
+            // user: username,
+            // play: "bluff",
+            numberOfCards: 0
+        }
+
         // OTHER PROPERTIES
         // this.mainDeck : main shuffled deck of the game
         // this.roundDeck : the deck of all the cards played in a round
         // this.currentChaal
-        // this.lastChaal : {user: "test1", play: bluff}
-
     }
 
     // host is the first user to visit the game.
@@ -107,7 +111,6 @@ class Game {
                 }
             })
         }
-
         delete this.playing[user];
     }
 
@@ -156,7 +159,6 @@ class Game {
                 }
             })
         }
-
         return list
     }
 
@@ -198,7 +200,6 @@ class Game {
         }
         this.playing[username].deck = arrangedDeck
         this.playing[username].orderedDeck = orderedDeck
-
     }
 
     // returns username
@@ -222,7 +223,6 @@ class Game {
 
     // update the ranks
     rearrangeUsersAndCardsLeft() {
-        console.log(this.playing)
         Object.entries(this.playing).forEach(player => {
             if (player[1].turn === 1) {
                 player[1].turn = Object.keys(this.playing).length;
@@ -230,7 +230,6 @@ class Game {
                 --player[1].turn
             }
         })
-        console.log(this.playing)
     }
 
     // when bluff is played
@@ -256,9 +255,9 @@ class Game {
 
         this.lastChaal = {
             user: username,
-            play: "bluff"
+            play: "bluff",
+            numberOfCards: listOfIndex.length
         }
-
     }
 
     playFair(username, quantity) {
@@ -274,9 +273,43 @@ class Game {
                 i++;
             }
         }
-
     }
 
+    bluffCaught(username) {
+
+        var caughtUser = this.lastChaal.user
+        this.playing[caughtUser].deck.push(...this.roundDeck)
+        this.roundDeck = []
+
+        var userTurn = this.playing[username].turn
+        Object.entries(this.playing).forEach(player => {
+            if (player[1].turn > userTurn) {
+                player[1].turn = player[1].turn - userTurn + 1
+            } else if (player[1].turn < userTurn) {
+                player[1].turn = Object.keys(this.playing).length - (userTurn - player[1].turn) + 1
+            }
+        })
+
+        this.playing[username].turn = 1
+    }
+
+    bluffWrongCall(username){
+
+        var wonUser = this.lastChaal.user
+        this.playing[username].deck.push(...this.roundDeck)
+        this.roundDeck = []
+
+        var userTurn = this.playing[wonUser].turn
+        Object.entries(this.playing).forEach(player => {
+            if (player[1].turn > userTurn) {
+                player[1].turn = player[1].turn - userTurn + 1
+            } else if (player[1].turn < userTurn) {
+                player[1].turn = Object.keys(this.playing).length - (userTurn - player[1].turn) + 1
+            }
+        })
+
+        this.playing[wonUser].turn = 1
+    }
 }
 
 const room1Game = new Game(state = "inactive")

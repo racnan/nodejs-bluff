@@ -108,16 +108,57 @@ exports = module.exports = function (io) {
 
         })
 
-        socket.on('played-bluff', (cardIndex) => {
-        
+        // check if the last turn was bluff
+        socket.on('played-check', () => {
             var room = ""
             var username = ""
-            
+
             // find the username and room by socketid
             for (var i = 0; i < socketAndRooms.length; i++) {
                 if (socketAndRooms[i].socketid === socket.id) {
                     room = socketAndRooms[i].room
                     username = socketAndRooms[i].username
+                    break
+                }
+            }
+
+            if (games[room].lastChaal.play === 'bluff') {
+
+                games[room].bluffCaught(username)
+                games[room].arrangeDeck(games[room].lastChaal.user)
+                games[room].rearrangeUsersAndCardsLeft()
+
+                // find the socketid of this.lastchaal
+                for (var i = 0; i < socketAndRooms.length; i++) {
+                    if (socketAndRooms[i].username === games[room].lastChaal.user) {
+                        lastChaalID = socketAndRooms[i].socketid
+                        break
+                    }
+                }
+
+                // send to the player of this.lastchaal
+                /* io.to(lastChaalID).emit('chaal-caught',
+                games[room].) */
+
+            } else {
+
+                games[room].bluffWrongCall(username)
+                games[room].arrangeDeck(username)
+                games[room].rearrangeUsersAndCardsLeft()
+            }
+        })
+
+        socket.on('played-bluff', (cardIndex) => {
+
+            var room = ""
+            var username = ""
+
+            // find the username and room by socketid
+            for (var i = 0; i < socketAndRooms.length; i++) {
+                if (socketAndRooms[i].socketid === socket.id) {
+                    room = socketAndRooms[i].room
+                    username = socketAndRooms[i].username
+                    break
                 }
             }
 
@@ -135,7 +176,8 @@ exports = module.exports = function (io) {
             socket.to(room).emit('played',
                 games[room].usersAndCardsLeft(),
                 games[room].currentTurn(),
-                games[room].isFirstTurn())
+                games[room].isFirstTurn(),
+                games[room].lastChaal.numberOfCards)
         })
 
         socket.on('played-fair', (quantity) => {
@@ -148,6 +190,7 @@ exports = module.exports = function (io) {
                 if (socketAndRooms[i].socketid === socket.id) {
                     room = socketAndRooms[i].room
                     username = socketAndRooms[i].username
+                    break
                 }
             }
 
@@ -165,7 +208,8 @@ exports = module.exports = function (io) {
             socket.to(room).emit('played',
                 games[room].usersAndCardsLeft(),
                 games[room].currentTurn(),
-                games[room].isFirstTurn())
+                games[room].isFirstTurn(),
+                games[room].lastChaal.numberOfCards)
 
         })
 
@@ -181,6 +225,7 @@ exports = module.exports = function (io) {
                 if (socketAndRooms[i].username === username) {
                     room = socketAndRooms[i].room
                     socketAndRooms[i].socketid = socket.id
+                    break
                 }
             }
 
@@ -203,6 +248,7 @@ exports = module.exports = function (io) {
                 if (socketAndRooms[i].socketid === socket.id) {
                     room = socketAndRooms[i].room
                     user = socketAndRooms[i].username
+                    break
                 }
             }
 
@@ -242,7 +288,7 @@ exports = module.exports = function (io) {
                 // when everyone has left the game
 
                 games[room].state = "inactive"
-                
+
 
             } else {
 
@@ -255,7 +301,7 @@ exports = module.exports = function (io) {
                 }
 
             }
-    
+
         }
     };
 
